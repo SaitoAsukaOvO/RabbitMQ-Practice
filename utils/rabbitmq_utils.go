@@ -10,6 +10,7 @@ const (
 	HelloQueue = "hello"
 	TaskQueue = "task_queue"
 	LogQueue = "logs"
+	LogQueueDirect = "logs_direct"
 )
 
 func GetChannels() *amqp.Channel {
@@ -31,6 +32,16 @@ func BodyForm(args []string) string{
 		s = "hello"
 	} else {
 		s = strings.Join(args[1:], " ")
+	}
+	return s
+}
+
+func SeverityFrom(args []string) string {
+	var s string
+	if (len(args) < 2) || os.Args[1] == "" {
+		s = "info"
+	} else {
+		s = os.Args[1]
 	}
 	return s
 }
