@@ -131,7 +131,8 @@ System A  ------------> MQ -----------> System B
 
 ## Practice:
 
-see codes
+see examples:
+https://www.rabbitmq.com/getstarted.html
 
 ## Useful Reference:
 
