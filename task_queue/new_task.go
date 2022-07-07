@@ -1,7 +1,7 @@
 package main
 
 import (
-	"RabbitMQ/utils"
+	"RabbitMQ-Practice/utils"
 	"log"
 	"os"
 

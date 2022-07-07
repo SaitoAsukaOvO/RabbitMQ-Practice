@@ -1,7 +1,7 @@
 package main
 
 import (
-	"RabbitMQ/utils"
+	"RabbitMQ-Practice/utils"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"log"
 	"os"

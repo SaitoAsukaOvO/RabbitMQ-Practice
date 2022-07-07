@@ -14,39 +14,39 @@ System A  ------------> MQ -----------> System B
 
 ### Pros:
 
-1. 应用解耦
+#### 应用解耦
 
-   直接远程调用：耦合性高，容错性低，可维护性低。
+直接远程调用：耦合性高，容错性低，可维护性低。
 
-    ```shell
-                                ---------------> System A
-                                |
-                                |
-    user ------------------> MQ ---------------> System B
-                                |
-                                |
-                                ---------------> System C
-    mq接受到msg，就返回成功
-    1. System A,B,C 只需要把msg拿出来去自己的系统里消费就可以
-    2. if A or B or C fails，不影响其他系统，同时等系统恢复后再把msg从MQ中拿出来消费就可以 （容错性提高）
-    3. 需要再加个System X，只需要X从MQ中拿出消息消费（可维护性提高）
-    ```
-
-2. 异步提速
-
-    ```shell
-                             --------300ms-------> System A
+```shell
+                             ---------------> System A
                              |
                              |
+ user ------------------> MQ ---------------> System B
                              |
-    user ------------------->| -------300ms--------> System B
-                 |           |
-                 20ms        |
-                 |           |
-                 DB          |
-                             --------300ms-------> System C
-    Latency = 20 + 300 + 300 + 300 = 920ms
-    ```
+                             |
+                             ---------------> System C
+ mq接受到msg，就返回成功
+ 1. System A,B,C 只需要把msg拿出来去自己的系统里消费就可以
+ 2. if A or B or C fails，不影响其他系统，同时等系统恢复后再把msg从MQ中拿出来消费就可以 （容错性提高）
+ 3. 需要再加个System X，只需要X从MQ中拿出消息消费（可维护性提高）
+```
+
+#### 异步提速
+
+```shell
+                         --------300ms-------> System A
+                         |
+                         |
+                         |
+user ------------------->| -------300ms--------> System B
+             |           |
+             20ms        |
+             |           |
+             DB          |
+                         --------300ms-------> System C
+Latency = 20 + 300 + 300 + 300 = 920ms
+```
 
 
 
@@ -65,39 +65,39 @@ System A  ------------> MQ -----------> System B
 
 
 
-3. 削峰填谷
+#### 削峰填谷
 
-   削峰：
+削峰：
 
-    ```shell
-                             ---------------> System A (QPS 1000)
-                             |                   |
-                             |                   |
-                             |                   DB
-    user ------------------->|
-    
-    瞬间请求增多：QPS=5000
-    ```
+```shell
+                          ---------------> System A (QPS 1000)
+                          |                   |
+                          |                   |
+                          |                   DB
+ user ------------------->|
+ 
+ 瞬间请求增多：QPS=5000
+```
 
-    ```
-                             ---------------> System A (QPS 1000) 从MQ中每秒拉取1000请求消费
-                             |                   |
-                             |                   |
-                             |                   DB
-    user ----MQ (5000 QPS)-->|
-    ```
+```
+                          ---------------> System A (QPS 1000) 从MQ中每秒拉取1000请求消费
+                          |                   |
+                          |                   |
+                          |                   DB
+ user ----MQ (5000 QPS)-->|
+```
 
 
 
     填谷：
-
+    
     积压的msg慢慢消费掉
-
+    
     ==> **提高稳定性**
 
 ### Cons:
 
-​	可用性降低，复杂性提高，一致性问题
+	可用性降低，复杂性提高，一致性问题
 
 ## RabbitMQ
 
@@ -133,6 +133,97 @@ System A  ------------> MQ -----------> System B
 
 see examples:
 https://www.rabbitmq.com/getstarted.html
+
+### Hello Word：
+
+one producer one consumer:
+
+![(P) -> [|||] -> (C)](https://www.rabbitmq.com/img/tutorials/python-one.png)
+
+### Work Queue:
+
+one producer multiple consumer (consumer为竞争关系)
+
+![img](https://www.rabbitmq.com/img/tutorials/python-two.png)
+
+#### 应用场景：
+
+对于**任务过重**或者**任务较多**的情况使用work queue可以提高任务处理速度
+
+#### Main Idea:
+
+The main idea behind Work Queues (aka: *Task Queues*) is to avoid doing a resource-intensive task immediately and having to wait for it to complete. Instead we schedule the task to be done later. We encapsulate a *task* as a message and send it to a queue. A worker process running in the background will pop the tasks and eventually execute the job. When you run many workers the tasks will be shared between them
+
+This concept is especially useful in web applications where it's impossible to handle a complex task during a short HTTP request window.
+
+#### Realization:
+
+We don't have a real-world task, like images to be resized or pdf files to be rendered, so let's fake it by just pretending we're busy - by using the `time.Sleep` function.
+
+We'll take the number of dots in the string as its complexity; every dot will account for one second of "work". For example, a fake task described by `Hello...` will take three seconds.
+
+#### Round-robin dispatching:
+
+```shell
+go run worker.go
+go run worker.go
+```
+
+```shell
+go run new_task.go First message.
+go run new_task.go Second message..
+go run new_task.go Third message...
+go run new_task.go Fourth message....
+go run new_task.go Fifth message.....
+```
+
+### Pub/Sub:
+
+![img](https://www.rabbitmq.com/img/tutorials/exchanges.png)
+
+#### exchange：
+
+##### 	Fanout:
+
+​		将消息交给所有绑定到的交换机队列
+
+##### 	Direct:
+
+​		把消息交给符合指定routing key的队列
+
+##### 	Topic:
+
+​		把消息交给符合routing pattern的队列
+
+1. 接受P发送的消息
+2. 知道如何处理消息，分发给某个特定队列，递交给所有队列，或者将消息丢弃
+
+```shell
+go run receive_log.go
+go run receive_log.go > logs.log
+go run send_log.go
+```
+
+#### 特性：
+
+work queue: 很多个消费者监听同一个queue，只能有一个消费者收到
+
+pub/sub: 很多消费者每个消费者监听自己的队列，消息来了之后，每个消费者都可以收到这个消息
+
+### Routing：
+
+![img](https://www.rabbitmq.com/img/tutorials/python-four.png)
+
+只有queue的key和消息的key一致时，才会接收到消息
+
+```shell
+ go run receive_log_direct.go info warning error
+ go run receive_log_direct.go warning error
+ go run send_log_direct.go error "Run. Run. Or it will explode."
+ go run send_log_direct.go
+```
+
+
 
 ## Useful Reference:
 

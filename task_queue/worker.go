@@ -1,7 +1,7 @@
 package main
 
 import (
-	"RabbitMQ/utils"
+	"RabbitMQ-Practice/utils"
 	"bytes"
 	"log"
 	"time"
@@ -37,7 +37,7 @@ func main() {
 	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer
-		true,   // auto-ack
+		false,   // auto-ack
 		false,  // exclusive
 		false,  // no-local
 		false,  // no-wait
@@ -48,6 +48,15 @@ func main() {
 
 	forever := make(chan bool)
 
+	/*
+	Message acknowledgment:
+	make sure a message is never lost
+	we will use manual message acknowledgements by passing a false for the "auto-ack" argument
+	and then send a proper acknowledgment from the worker with d.Ack(false)
+	(this acknowledges a single delivery), once we're done with a task.
+	When multiple is true, this delivery and all prior unacknowledged deliveries
+	on the same channel will be acknowledged.
+	 */
 	go func() {
 		for d := range msgs {
 			log.Printf("Received a message: %s", d.Body)
