@@ -13,7 +13,7 @@ func main() {
 	ch := utils.GetChannels()
 	err := ch.ExchangeDeclare(utils.LogQueueDirect, "direct", true, false, false, false, nil)
 	utils.FailOnError(err, "fail to declare exchange")
-	body := utils.BodyForm(os.Args)
+	body := utils.BodyFrom(os.Args)
 	err = ch.Publish(utils.LogQueueDirect,  utils.SeverityFrom(os.Args), false, false,  amqp.Publishing{
 		ContentType: "text/plain",
 		Body:        []byte(body),
