@@ -29,7 +29,7 @@ func main() {
 	)
 	utils.FailOnError(err, "Failed to declare a queue")
 
-	body := utils.BodyForm(os.Args)
+	body := utils.BodyFrom(os.Args)
 	err = ch.Publish(
 		"",     // exchange
 		q.Name, // routing key

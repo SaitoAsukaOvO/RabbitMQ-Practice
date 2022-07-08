@@ -26,7 +26,7 @@ func GetChannels() *amqp.Channel {
 	return ch
 }
 
-func BodyForm(args []string) string{
+func BodyFrom(args []string) string{
 	var s string
 	if (len(args) < 2) || os.Args[1] == "" {
 		s = "hello"
